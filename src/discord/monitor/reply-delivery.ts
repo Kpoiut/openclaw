@@ -156,6 +156,7 @@ async function sendDiscordChunkWithFallback(params: {
   if (binding?.webhookId && binding?.webhookToken) {
     try {
       await sendWebhookMessageDiscord(text, {
+        cfg: params.cfg,
         webhookId: binding.webhookId,
         webhookToken: binding.webhookToken,
         accountId: binding.accountId,

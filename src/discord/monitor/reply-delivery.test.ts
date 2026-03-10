@@ -428,6 +428,7 @@ describe("deliverDiscordReply", () => {
     expect(sendWebhookMessageDiscordMock).toHaveBeenCalledWith(
       "Hello from subagent",
       expect.objectContaining({
+        cfg,
         webhookId: "wh_1",
         webhookToken: "tok_1",
         accountId: "default",
@@ -481,6 +482,7 @@ describe("deliverDiscordReply", () => {
     });
 
     expect(sendWebhookMessageDiscordMock).toHaveBeenCalledTimes(1);
+    expect(sendWebhookMessageDiscordMock.mock.calls[0]?.[1]?.cfg).toBe(cfg);
     expect(sendMessageDiscordMock).toHaveBeenCalledTimes(1);
     expect(sendMessageDiscordMock).toHaveBeenCalledWith(
       "channel:thread-1",

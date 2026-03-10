@@ -136,6 +136,7 @@ export async function maybeSendBindingMessage(params: {
   if (params.preferWebhook !== false && record.webhookId && record.webhookToken) {
     try {
       await sendWebhookMessageDiscord(text, {
+        cfg: params.cfg,
         webhookId: record.webhookId,
         webhookToken: record.webhookToken,
         accountId: record.accountId,
