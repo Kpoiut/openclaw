@@ -627,9 +627,13 @@ describe("thread binding lifecycle", () => {
   });
 
   it("passes manager token when resolving parent channels for auto-bind", async () => {
+    const cfg = {
+      channels: { discord: { token: "tok" } },
+    } as OpenClawConfig;
     createThreadBindingManager({
       accountId: "runtime",
       token: "runtime-token",
+      cfg,
       persist: false,
       enableSweeper: false,
       idleTimeoutMs: 24 * 60 * 60 * 1000,
@@ -647,6 +651,7 @@ describe("thread binding lifecycle", () => {
     hoisted.createThreadDiscord.mockResolvedValueOnce({ id: "thread-created-runtime" });
 
     const childBinding = await autoBindSpawnedDiscordSubagent({
+      cfg,
       accountId: "runtime",
       channel: "discord",
       to: "channel:thread-runtime",
@@ -662,6 +667,16 @@ describe("thread binding lifecycle", () => {
       accountId: "runtime",
       token: "runtime-token",
     });
+    const usedCfg = hoisted.createDiscordRestClient.mock.calls.some((call) => {
+      if (call?.[1] === cfg) {
+        return true;
+      }
+      const first = call?.[0];
+      return (
+        typeof first === "object" && first !== null && (first as { cfg?: unknown }).cfg === cfg
+      );
+    });
+    expect(usedCfg).toBe(true);
   });
 
   it("refreshes manager token when an existing manager is reused", async () => {

@@ -1,4 +1,5 @@
 import { ChannelType, Routes } from "discord-api-types/v10";
+import type { OpenClawConfig } from "../../config/config.js";
 import { logVerbose } from "../../globals.js";
 import { createDiscordRestClient } from "../client.js";
 import { sendMessageDiscord, sendWebhookMessageDiscord } from "../send.js";
@@ -122,6 +123,7 @@ export function isDiscordThreadGoneError(err: unknown): boolean {
 }
 
 export async function maybeSendBindingMessage(params: {
+  cfg?: OpenClawConfig;
   record: ThreadBindingRecord;
   text: string;
   preferWebhook?: boolean;
@@ -147,6 +149,7 @@ export async function maybeSendBindingMessage(params: {
   }
   try {
     await sendMessageDiscord(buildThreadTarget(record.threadId), text, {
+      cfg: params.cfg,
       accountId: record.accountId,
     });
   } catch (err) {
@@ -155,15 +158,19 @@ export async function maybeSendBindingMessage(params: {
 }
 
 export async function createWebhookForChannel(params: {
+  cfg?: OpenClawConfig;
   accountId: string;
   token?: string;
   channelId: string;
 }): Promise<{ webhookId?: string; webhookToken?: string }> {
   try {
-    const rest = createDiscordRestClient({
-      accountId: params.accountId,
-      token: params.token,
-    }).rest;
+    const rest = createDiscordRestClient(
+      {
+        accountId: params.accountId,
+        token: params.token,
+      },
+      params.cfg,
+    ).rest;
     const created = (await rest.post(Routes.channelWebhooks(params.channelId), {
       body: {
         name: "OpenClaw Agents",
@@ -218,6 +225,7 @@ export function findReusableWebhook(params: { accountId: string; channelId: stri
 }
 
 export async function resolveChannelIdForBinding(params: {
+  cfg?: OpenClawConfig;
   accountId: string;
   token?: string;
   threadId: string;
@@ -228,10 +236,13 @@ export async function resolveChannelIdForBinding(params: {
     return explicit;
   }
   try {
-    const rest = createDiscordRestClient({
-      accountId: params.accountId,
-      token: params.token,
-    }).rest;
+    const rest = createDiscordRestClient(
+      {
+        accountId: params.accountId,
+        token: params.token,
+      },
+      params.cfg,
+    ).rest;
     const channel = (await rest.get(Routes.channel(params.threadId))) as {
       id?: string;
       type?: number;
@@ -261,6 +272,7 @@ export async function resolveChannelIdForBinding(params: {
 }
 
 export async function createThreadForBinding(params: {
+  cfg?: OpenClawConfig;
   accountId: string;
   token?: string;
   channelId: string;
@@ -274,6 +286,7 @@ export async function createThreadForBinding(params: {
         autoArchiveMinutes: 60,
       },
       {
+        cfg: params.cfg,
         accountId: params.accountId,
         token: params.token,
       },

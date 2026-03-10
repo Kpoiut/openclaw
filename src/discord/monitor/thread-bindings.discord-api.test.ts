@@ -1,5 +1,6 @@
 import { ChannelType } from "discord-api-types/v10";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { OpenClawConfig } from "../../config/config.js";
 
 const hoisted = vi.hoisted(() => {
   const restGet = vi.fn();
@@ -51,6 +52,26 @@ describe("resolveChannelIdForBinding", () => {
     });
 
     expect(resolved).toBe("channel-parent");
+  });
+
+  it("forwards cfg when resolving channel id through Discord client", async () => {
+    const cfg = {
+      channels: { discord: { token: "tok" } },
+    } as OpenClawConfig;
+    hoisted.restGet.mockResolvedValueOnce({
+      id: "thread-1",
+      type: ChannelType.PublicThread,
+      parent_id: "channel-parent",
+    });
+
+    await resolveChannelIdForBinding({
+      cfg,
+      accountId: "default",
+      threadId: "thread-1",
+    });
+
+    const createDiscordRestClientCalls = hoisted.createDiscordRestClient.mock.calls as unknown[][];
+    expect(createDiscordRestClientCalls[0]?.[1]).toBe(cfg);
   });
 
   it("keeps non-thread channel id even when parent_id exists", async () => {

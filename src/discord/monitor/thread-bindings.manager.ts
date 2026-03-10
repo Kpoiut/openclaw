@@ -1,5 +1,6 @@
 import { Routes } from "discord-api-types/v10";
 import { resolveThreadBindingConversationIdFromBindingId } from "../../channels/thread-binding-id.js";
+import type { OpenClawConfig } from "../../config/config.js";
 import { logVerbose } from "../../globals.js";
 import {
   registerSessionBindingAdapter,
@@ -162,6 +163,7 @@ export function createThreadBindingManager(
   params: {
     accountId?: string;
     token?: string;
+    cfg?: OpenClawConfig;
     persist?: boolean;
     enableSweeper?: boolean;
     idleTimeoutMs?: number;
@@ -188,6 +190,7 @@ export function createThreadBindingManager(
     params.maxAgeMs,
     DEFAULT_THREAD_BINDING_MAX_AGE_MS,
   );
+  const managerCfg = params.cfg;
   const resolveCurrentToken = () => getThreadBindingToken(accountId) ?? params.token;
 
   let sweepTimer: NodeJS.Timeout | null = null;
@@ -268,6 +271,7 @@ export function createThreadBindingManager(
         });
         threadId =
           (await createThreadForBinding({
+            cfg: managerCfg,
             accountId,
             token: resolveCurrentToken(),
             channelId,
@@ -282,6 +286,7 @@ export function createThreadBindingManager(
       if (!channelId) {
         channelId =
           (await resolveChannelIdForBinding({
+            cfg: managerCfg,
             accountId,
             token: resolveCurrentToken(),
             threadId,
@@ -307,6 +312,7 @@ export function createThreadBindingManager(
       }
       if (!webhookId || !webhookToken) {
         const createdWebhook = await createWebhookForChannel({
+          cfg: managerCfg,
           accountId,
           token: resolveCurrentToken(),
           channelId,
@@ -340,7 +346,7 @@ export function createThreadBindingManager(
 
       const introText = bindParams.introText?.trim();
       if (introText) {
-        void maybeSendBindingMessage({ record, text: introText });
+        void maybeSendBindingMessage({ cfg: managerCfg, record, text: introText });
       }
       return record;
     },
@@ -379,7 +385,12 @@ export function createThreadBindingManager(
         });
         // Use bot send path for farewell messages so unbound threads don't process
         // webhook echoes as fresh inbound turns when allowBots is enabled.
-        void maybeSendBindingMessage({ record: removed, text: farewell, preferWebhook: false });
+        void maybeSendBindingMessage({
+          cfg: managerCfg,
+          record: removed,
+          text: farewell,
+          preferWebhook: false,
+        });
       }
       return removed;
     },
@@ -433,10 +444,13 @@ export function createThreadBindingManager(
         }
         let rest;
         try {
-          rest = createDiscordRestClient({
-            accountId,
-            token: resolveCurrentToken(),
-          }).rest;
+          rest = createDiscordRestClient(
+            {
+              accountId,
+              token: resolveCurrentToken(),
+            },
+            managerCfg,
+          ).rest;
         } catch {
           return;
         }
@@ -563,6 +577,7 @@ export function createThreadBindingManager(
         if (!channelId && conversationId) {
           channelId =
             (await resolveChannelIdForBinding({
+              cfg: managerCfg,
               accountId,
               token: resolveCurrentToken(),
               threadId: conversationId,
