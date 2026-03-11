@@ -4,7 +4,7 @@ import WebSocket from "ws";
 const ws = new WebSocket("ws://127.0.0.1:19001/");
 
 let nonce = null;
-const token = "af9934210bb717e07c339cbe408588431aaaef5bbed71cd9d162f88791db4d05";
+const token = process.env.OPENCLAW_GATEWAY_TOKEN || "test-token-placeholder";
 
 console.log("Connecting to gateway at ws://127.0.0.1:19001/");
 

@@ -13,14 +13,17 @@ $ws.ConnectAsync($endpoint, $ct).Wait()
 
 # Receive challenge
 $buffer = [byte[]]::new(8192)
-$result = $ws.ReceiveAsync($buffer, $ct).Wait()
+$receiveTask = $ws.ReceiveAsync($buffer, $ct)
+$receiveTask.Wait()
+$result = $receiveTask.Result
 $challengeText = [System.Text.Encoding]::UTF8.GetString($buffer, 0, $result.Count)
 $challenge = $challengeText | ConvertFrom-Json
 Write-Host "Received challenge: $($challenge.event)" -ForegroundColor Yellow
 
 if ($challenge.event -eq "connect.challenge") {
     Write-Host "Sending auth response with token..." -ForegroundColor Yellow
-    $token = "af9934210bb717e07c339cbe408588431aaaef5bbed71cd9d162f88791db4d05"
+    # Use environment variable or placeholder
+    $token = if ($env:OPENCLAW_GATEWAY_TOKEN) { $env:OPENCLAW_GATEWAY_TOKEN } else { "test-token-placeholder" }
     $authResponse = @{
         type = "auth"
         method = "token"
@@ -34,7 +37,9 @@ if ($challenge.event -eq "connect.challenge") {
 
 # Wait for auth result
 $buffer = [byte[]]::new(4096)
-$result = $ws.ReceiveAsync($buffer, $ct).Wait()
+$receiveTask = $ws.ReceiveAsync($buffer, $ct)
+$receiveTask.Wait()
+$result = $receiveTask.Result
 $authText = [System.Text.Encoding]::UTF8.GetString($buffer, 0, $result.Count)
 $auth = $authText | ConvertFrom-Json
 Write-Host "Auth result: $($auth.event)" -ForegroundColor Yellow
@@ -63,10 +68,11 @@ if ($auth.event -eq "connect.success") {
 
     while ($elapsed -lt $timeout -and $ws.State -eq 'Open') {
         $buffer = [byte[]]::new(8192)
-        $result = $ws.ReceiveAsync($buffer, $ct)
+        $receiveTask = $ws.ReceiveAsync($buffer, $ct)
 
-        if ($result.Wait(1000)) {
-            $responseText = [System.Text.Encoding]::UTF8.GetString($buffer, 0, $result.Result.Count)
+        if ($receiveTask.Wait(1000)) {
+            $result = $receiveTask.Result
+            $responseText = [System.Text.Encoding]::UTF8.GetString($buffer, 0, $result.Count)
             $resp = $responseText | ConvertFrom-Json
 
             # Handle streaming

@@ -225,9 +225,11 @@ export async function sendChatMessage(
 
   // Only include thinkingLevel if explicitly enabled AND supported by gateway
   const chatThinkingEnabled = (state as unknown as { chatThinkingEnabled?: boolean }).chatThinkingEnabled;
-  const gatewayCaps = (state as unknown as { gatewayCapabilities?: { thinkingSupported?: boolean } }).gatewayCapabilities;
+  const chatThinkingLevel = (state as unknown as { chatThinkingLevel?: string }).chatThinkingLevel;
+  const gatewayCaps = (state as unknown as { gatewayCapabilities?: { thinkingSupported?: boolean; thinkingLevels?: string[] } }).gatewayCapabilities;
   if (chatThinkingEnabled && gatewayCaps?.thinkingSupported) {
-    requestPayload.thinkingLevel = "medium";
+    // Use user's configured thinking level, fall back to "medium" if not set
+    requestPayload.thinkingLevel = chatThinkingLevel ?? "medium";
   }
 
   try {
