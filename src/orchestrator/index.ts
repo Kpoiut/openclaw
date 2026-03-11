@@ -16,6 +16,10 @@ export { ShortTermMemory, shortTermMemory, MemoryEntry, TaskContext, TaskStep } 
 export { ExecutionEngine, executionEngine, ActionRecord, ExecutionStatus } from './execution-engine.js';
 export { MemoryEngine, memoryEngine, EpisodicMemoryEntry, SemanticMemoryEntry, PolicyMemoryEntry } from './memory-engine.js';
 
+// Phase 2: Device Control & Repo Map
+export { FileControl, AppControl, ClipboardControl, ProcessControl, ShellControl, WindowControl, fileControl, appControl, clipboardControl, processControl, shellControl, windowControl } from './device-control.js';
+export { RepoMapBuilder, SymbolIndexer, PatchPlanner, repoMapBuilder, symbolIndexer, patchPlanner, FileNode, RepoMap, Symbol, SymbolIndex, Patch, PatchResult } from './repo-map.js';
+
 /**
  * Main Orchestrator class that coordinates all components
  */
