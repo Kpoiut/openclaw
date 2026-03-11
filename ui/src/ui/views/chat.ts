@@ -573,14 +573,28 @@ export function renderChat(props: ChatProps) {
               placeholder=${composePlaceholder}
             ></textarea>
 
-            <button
-              class="compose-send-btn"
-              ?disabled=${!props.connected || (!canCompose && !props.draft)}
-              @click=${props.onSend}
-              title="Send message"
-            >
-              ${icons.send}
-            </button>
+            ${
+              canAbort
+                ? html`
+                    <button
+                      class="compose-abort-btn"
+                      @click=${props.onAbort}
+                      title="Stop agent"
+                    >
+                      ${icons.stop || icons.x}
+                    </button>
+                  `
+                : html`
+                    <button
+                      class="compose-send-btn"
+                      ?disabled=${!props.connected || (!canCompose && !props.draft)}
+                      @click=${props.onSend}
+                      title="Send message"
+                    >
+                      ${icons.send}
+                    </button>
+                  `
+            }
           </div>
         </div>
       </div>
